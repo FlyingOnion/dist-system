@@ -17,13 +17,23 @@ package raft
 //   in the same server.
 //
 
-import "sync"
+import (
+	"fmt"
+	"math/rand"
+	"sync"
+	"time"
+)
 import "labrpc"
 
 // import "bytes"
 // import "encoding/gob"
 
-
+const (
+	StateFollower = iota
+	StateCandidate
+	StateLeader
+	numStates
+)
 
 //
 // as each Raft peer becomes aware that successive log entries are
@@ -49,7 +59,22 @@ type Raft struct {
 	// Your data here (2A, 2B, 2C).
 	// Look at the paper's Figure 2 for a description of what
 	// state a Raft server must maintain.
+	currentTerm int
+	votedFor    int
+	logEntries  []interface{}
 
+	state int
+
+	commitIndex int
+	lastApplied int
+
+	// election timer: 150~300ms
+	// vote timer: 250~400ms
+	// heartbeat timer: 50~100ms
+
+	voteC chan *RequestVoteArgs
+	appC  chan *RequestAppendEntriesArgs
+	exitC chan bool
 }
 
 // return currentTerm and whether this server
@@ -59,6 +84,10 @@ func (rf *Raft) GetState() (int, bool) {
 	var term int
 	var isleader bool
 	// Your code here (2A).
+	rf.mu.Lock()
+	term = rf.currentTerm
+	isleader = (rf.state == StateLeader)
+	rf.mu.Unlock()
 	return term, isleader
 }
 
@@ -93,15 +122,16 @@ func (rf *Raft) readPersist(data []byte) {
 	}
 }
 
-
-
-
 //
 // example RequestVote RPC arguments structure.
 // field names must start with capital letters!
 //
 type RequestVoteArgs struct {
 	// Your data here (2A, 2B).
+	Term         int
+	CandidateId  int
+	LastLogIndex int
+	LastLogTerm  int
 }
 
 //
@@ -110,6 +140,31 @@ type RequestVoteArgs struct {
 //
 type RequestVoteReply struct {
 	// Your data here (2A).
+	Term        int
+	VoteGranted bool
+}
+
+//
+// AppendEntries RPC arg structure
+// also take as heartbeat
+//
+type RequestAppendEntriesArgs struct {
+	Term         int
+	Leader       int
+	PrevLogIndex int
+	PrevLogTerm  int
+	LogEntries   []interface{}
+	LeaderCommit int
+}
+
+type RequestAppendEntriesReply struct {
+	Term    int
+	Success bool
+}
+
+func randomDuration(min, max int64) time.Duration {
+	// 1e6: millisecond
+	return time.Duration((min + rand.Int63n(max-min)) * 1e6)
 }
 
 //
@@ -117,6 +172,16 @@ type RequestVoteReply struct {
 //
 func (rf *Raft) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) {
 	// Your code here (2A, 2B).
+	vote := false
+	if args.Term > rf.currentTerm {
+		vote = true
+		rf.voteC <- args
+	}
+	// set reply
+	reply.Term = rf.currentTerm
+	reply.VoteGranted = vote
+	fmt.Println(time.Now(), args.CandidateId, "->", rf.me, "received")
+	fmt.Println(time.Now(), args.CandidateId, "->", rf.me, "vote result", vote)
 }
 
 //
@@ -149,10 +214,27 @@ func (rf *Raft) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) {
 // the struct itself.
 //
 func (rf *Raft) sendRequestVote(server int, args *RequestVoteArgs, reply *RequestVoteReply) bool {
+	fmt.Println(time.Now(), rf.me, "call", server, "rpc start, term:", args.Term)
 	ok := rf.peers[server].Call("Raft.RequestVote", args, reply)
+	fmt.Println(time.Now(), rf.me, "call", server, "rpc end, term:", args.Term)
 	return ok
 }
 
+func (rf *Raft) RequestAppendEntries(args *RequestAppendEntriesArgs, reply *RequestAppendEntriesReply) {
+	success := false
+	if args.Term >= rf.currentTerm {
+		success = true
+		rf.appC <- args
+	}
+	reply.Success = success
+	reply.Term = rf.currentTerm
+}
+
+func (rf *Raft) sendRequestAppendEntries(server int, args *RequestAppendEntriesArgs, reply *RequestAppendEntriesReply) bool {
+	ok := rf.peers[server].Call("Raft.RequestAppendEntries", args, reply)
+	// fmt.Println(args, reply)
+	return ok
+}
 
 //
 // the service using Raft (e.g. a k/v server) wants to start
@@ -170,10 +252,22 @@ func (rf *Raft) sendRequestVote(server int, args *RequestVoteArgs, reply *Reques
 func (rf *Raft) Start(command interface{}) (int, int, bool) {
 	index := -1
 	term := -1
-	isLeader := true
+	isLeader := rf.state == StateLeader
 
 	// Your code here (2B).
+	if isLeader {
+		raArgs := RequestAppendEntriesArgs{
+			Term:   rf.currentTerm,
+			Leader: rf.me,
+		}
+		var raReply RequestAppendEntriesReply
+		for i := 0; i < len(rf.peers); i++ {
+			rf.sendRequestAppendEntries(i, &raArgs, &raReply)
+			if raReply.Success {
 
+			}
+		}
+	}
 
 	return index, term, isLeader
 }
@@ -186,6 +280,11 @@ func (rf *Raft) Start(command interface{}) (int, int, bool) {
 //
 func (rf *Raft) Kill() {
 	// Your code here, if desired.
+	close(rf.exitC)
+	//	defer func() {
+	//		close(rf.appC)
+	//		close(rf.voteC)
+	//	}()
 }
 
 //
@@ -201,16 +300,178 @@ func (rf *Raft) Kill() {
 //
 func Make(peers []*labrpc.ClientEnd, me int,
 	persister *Persister, applyCh chan ApplyMsg) *Raft {
+	fmt.Println(time.Now(), "creating raft", me)
 	rf := &Raft{}
 	rf.peers = peers
 	rf.persister = persister
 	rf.me = me
 
 	// Your initialization code here (2A, 2B, 2C).
+	rand.Seed(time.Now().UnixNano())
+	// Initialize timer
+
+	rf.appC = make(chan *RequestAppendEntriesArgs)
+	rf.voteC = make(chan *RequestVoteArgs)
+	rf.exitC = make(chan bool)
+
+	rf.becomeFollower(1, 0)
 
 	// initialize from state persisted before a crash
 	rf.readPersist(persister.ReadRaftState())
-
-
+	fmt.Println(time.Now(), me, "created")
 	return rf
+}
+
+// Attention:
+// becomeXXX should be called directly in OTHER functions
+// and should be called async (use "go") when they are called by each other
+
+func (rf *Raft) becomeFollower(term, leader int) {
+	rf.mu.Lock()
+	rf.state = StateFollower
+
+	rf.currentTerm = term
+	rf.votedFor = leader
+	rf.mu.Unlock()
+	go func() {
+		select {
+		case <-rf.exitC:
+			return
+		case args := <-rf.appC:
+			fmt.Println(time.Now(), rf.me, "got hb request from", args.Leader)
+			rf.becomeFollower(args.Term, args.Leader)
+		case args := <-rf.voteC:
+			fmt.Println(time.Now(), rf.me, "got vote request from", args.CandidateId)
+			rf.becomeFollower(args.Term, args.CandidateId)
+		case <-time.After(randomDuration(150, 300)):
+			fmt.Println(time.Now(), rf.me, "become candidate")
+			rf.becomeCandidate()
+		}
+	}()
+
+}
+
+func (rf *Raft) becomeCandidate() {
+
+	rf.mu.Lock()
+	currentTerm := rf.currentTerm
+	rf.state = StateCandidate
+
+	rf.currentTerm++
+	fmt.Println(time.Now(), rf.me, "begin vote, term:", rf.currentTerm)
+	rf.votedFor = rf.me
+	rf.mu.Unlock()
+
+	// use only once in each vote process
+	winVoteC := make(chan bool)
+	voteReceiveC := make(chan bool)
+	go func() {
+		select {
+		case <-rf.exitC:
+			return
+		case args := <-rf.appC:
+			fmt.Println(rf.me, "got hb request from", args.Leader)
+			fmt.Println(rf.me, "become follower")
+			rf.becomeFollower(args.Term, args.Leader)
+		case args := <-rf.voteC:
+			fmt.Println(rf.me, "got vote request from", args.CandidateId)
+			fmt.Println(rf.me, "become follower")
+			rf.becomeFollower(args.Term, args.CandidateId)
+		case <-winVoteC:
+			fmt.Println(rf.me, "become leader")
+			rf.becomeLeader()
+		case <-time.After(randomDuration(350, 400)):
+			rf.becomeCandidate()
+		}
+	}()
+
+	rvArgs := RequestVoteArgs{
+		Term:        rf.currentTerm,
+		CandidateId: rf.me,
+	}
+	var rvReply RequestVoteReply
+	voteCount := 0
+
+	go func() {
+		for voteCount <= len(rf.peers)/2 {
+			<-voteReceiveC
+			voteCount += 1
+		}
+		if rf.currentTerm == currentTerm && rf.state == StateCandidate {
+			fmt.Println(time.Now(), rf.me, "got enough votes")
+		}
+
+		close(winVoteC)
+		close(voteReceiveC)
+	}()
+
+	for i := 0; i < len(rf.peers); i++ {
+		go func(peerId int) {
+			if peerId == rf.me {
+				voteReceiveC <- true
+				return
+			}
+			fmt.Println(time.Now(), "sending vote", rf.me, "->", peerId)
+			rf.sendRequestVote(peerId, &rvArgs, &rvReply)
+			if rvReply.VoteGranted {
+				select {
+				case <-winVoteC:
+					return
+				default:
+					voteReceiveC <- true
+				}
+			} else if rf.currentTerm < rvReply.Term {
+				rf.becomeFollower(rvReply.Term, 0)
+				return
+			}
+		}(i)
+	}
+}
+
+func (rf *Raft) becomeLeader() {
+	rf.mu.Lock()
+	rf.state = StateLeader
+	rf.mu.Unlock()
+
+	raArgs := RequestAppendEntriesArgs{
+		Term:   rf.currentTerm,
+		Leader: rf.me,
+	}
+	var raReply RequestAppendEntriesReply
+	// leader maintainance
+	// send heartbeat periodly
+	go func() {
+		for rf.state == StateLeader {
+			select {
+			case <-rf.exitC:
+				return
+			case args := <-rf.appC:
+				rf.becomeFollower(args.Term, args.Leader)
+			case args := <-rf.voteC:
+				rf.becomeFollower(args.Term, args.CandidateId)
+			case <-time.After(randomDuration(50, 80)):
+				for i := 0; i < len(rf.peers); i++ {
+					go func(peerId int) {
+						if peerId != rf.me {
+							rf.sendRequestAppendEntries(peerId, &raArgs, &raReply)
+
+							// discover a server with higher term
+							// turns into follower
+							if rf.currentTerm < raReply.Term {
+								rf.currentTerm = raReply.Term
+
+								// already in a go func, so we could call it directly
+								// state will change and the loop will terminate
+								rf.becomeFollower(rf.currentTerm, 0)
+								return
+							}
+						}
+					}(i)
+
+				}
+			}
+		}
+
+	}()
+
 }

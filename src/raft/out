@@ -1,0 +1,121 @@
+2018-02-14 22:08:18.831517027 +0800 CST creating raft 0
+2018-02-14 22:08:18.832147009 +0800 CST 0 created
+2018-02-14 22:08:18.832814959 +0800 CST creating raft 1
+2018-02-14 22:08:18.833128116 +0800 CST 1 created
+2018-02-14 22:08:18.833591283 +0800 CST creating raft 2
+2018-02-14 22:08:18.833883556 +0800 CST 2 created
+Test (2A): initial election ...
+2018-02-14 22:08:18.9971193 +0800 CST 2 become candidate
+2018-02-14 22:08:18.997244758 +0800 CST 2 begin vote, term: 2
+2018-02-14 22:08:18.999339947 +0800 CST sending vote 2 -> 0
+2018-02-14 22:08:18.999446698 +0800 CST 2 call 0 rpc start, term: 2
+2018-02-14 22:08:19.000562903 +0800 CST sending vote 2 -> 1
+2018-02-14 22:08:19.000637154 +0800 CST 2 call 1 rpc start, term: 2
+2018-02-14 22:08:19.002402949 +0800 CST 2 -> 0 received
+2018-02-14 22:08:19.002469941 +0800 CST 2 -> 0 vote result true
+2018-02-14 22:08:19.002789407 +0800 CST 0 got vote request from 2
+2018-02-14 22:08:19.004238378 +0800 CST 2 call 0 rpc end, term: 2
+2 become leader
+2018-02-14 22:08:19.004815207 +0800 CST 2 -> 1 received
+2018-02-14 22:08:19.005195439 +0800 CST 2 -> 1 vote result true
+2018-02-14 22:08:19.005519972 +0800 CST 1 got vote request from 2
+2018-02-14 22:08:19.007675012 +0800 CST 2 call 1 rpc end, term: 2
+2018-02-14 22:08:19.073772923 +0800 CST 0 got hb request from 2
+2018-02-14 22:08:19.075080694 +0800 CST 1 got hb request from 2
+2018-02-14 22:08:19.14001848 +0800 CST 0 got hb request from 2
+2018-02-14 22:08:19.141039746 +0800 CST 1 got hb request from 2
+2018-02-14 22:08:19.207739605 +0800 CST 0 got hb request from 2
+2018-02-14 22:08:19.215062474 +0800 CST 1 got hb request from 2
+2018-02-14 22:08:19.273663953 +0800 CST 1 got hb request from 2
+2018-02-14 22:08:19.275125299 +0800 CST 0 got hb request from 2
+2018-02-14 22:08:19.334174303 +0800 CST 1 got hb request from 2
+2018-02-14 22:08:19.33575545 +0800 CST 0 got hb request from 2
+2018-02-14 22:08:19.392906368 +0800 CST 1 got hb request from 2
+2018-02-14 22:08:19.39443853 +0800 CST 0 got hb request from 2
+2018-02-14 22:08:19.458634258 +0800 CST 0 got hb request from 2
+2018-02-14 22:08:19.45939992 +0800 CST 1 got hb request from 2
+2018-02-14 22:08:19.512024477 +0800 CST 0 got hb request from 2
+2018-02-14 22:08:19.514359767 +0800 CST 1 got hb request from 2
+2018-02-14 22:08:19.566727103 +0800 CST 0 got hb request from 2
+2018-02-14 22:08:19.567412318 +0800 CST 1 got hb request from 2
+2018-02-14 22:08:19.618541832 +0800 CST 1 got hb request from 2
+2018-02-14 22:08:19.620302581 +0800 CST 0 got hb request from 2
+2018-02-14 22:08:19.679333219 +0800 CST 0 got hb request from 2
+2018-02-14 22:08:19.683338067 +0800 CST 1 got hb request from 2
+2018-02-14 22:08:19.757835148 +0800 CST 1 got hb request from 2
+2018-02-14 22:08:19.759446905 +0800 CST 0 got hb request from 2
+2018-02-14 22:08:19.808750368 +0800 CST 0 got hb request from 2
+2018-02-14 22:08:19.811728073 +0800 CST 1 got hb request from 2
+2018-02-14 22:08:19.884222643 +0800 CST 1 got hb request from 2
+2018-02-14 22:08:19.885266603 +0800 CST 0 got hb request from 2
+2018-02-14 22:08:19.946195462 +0800 CST 1 got hb request from 2
+2018-02-14 22:08:19.947785344 +0800 CST 0 got hb request from 2
+2018-02-14 22:08:20.019605275 +0800 CST 0 got hb request from 2
+2018-02-14 22:08:20.020281616 +0800 CST 1 got hb request from 2
+2018-02-14 22:08:20.093386975 +0800 CST 0 got hb request from 2
+2018-02-14 22:08:20.09468919 +0800 CST 1 got hb request from 2
+2018-02-14 22:08:20.167314784 +0800 CST 0 got hb request from 2
+2018-02-14 22:08:20.167608375 +0800 CST 1 got hb request from 2
+2018-02-14 22:08:20.237884317 +0800 CST 1 got hb request from 2
+2018-02-14 22:08:20.240496694 +0800 CST 0 got hb request from 2
+2018-02-14 22:08:20.290885926 +0800 CST 1 got hb request from 2
+2018-02-14 22:08:20.29228883 +0800 CST 0 got hb request from 2
+2018-02-14 22:08:20.34942711 +0800 CST 0 got hb request from 2
+2018-02-14 22:08:20.350811777 +0800 CST 1 got hb request from 2
+2018-02-14 22:08:20.424045011 +0800 CST 0 got hb request from 2
+2018-02-14 22:08:20.426232448 +0800 CST 1 got hb request from 2
+2018-02-14 22:08:20.497664097 +0800 CST 1 got hb request from 2
+2018-02-14 22:08:20.503149293 +0800 CST 0 got hb request from 2
+2018-02-14 22:08:20.572738739 +0800 CST 1 got hb request from 2
+2018-02-14 22:08:20.573649951 +0800 CST 0 got hb request from 2
+2018-02-14 22:08:20.634060889 +0800 CST 1 got hb request from 2
+2018-02-14 22:08:20.635164894 +0800 CST 0 got hb request from 2
+2018-02-14 22:08:20.690025488 +0800 CST 1 got hb request from 2
+2018-02-14 22:08:20.692924726 +0800 CST 0 got hb request from 2
+2018-02-14 22:08:20.744692462 +0800 CST 0 got hb request from 2
+2018-02-14 22:08:20.746531717 +0800 CST 1 got hb request from 2
+2018-02-14 22:08:20.801966014 +0800 CST 1 got hb request from 2
+2018-02-14 22:08:20.80385189 +0800 CST 0 got hb request from 2
+2018-02-14 22:08:20.866905943 +0800 CST 0 got hb request from 2
+2018-02-14 22:08:20.869103128 +0800 CST 1 got hb request from 2
+2018-02-14 22:08:20.938233844 +0800 CST 0 got hb request from 2
+2018-02-14 22:08:20.938889971 +0800 CST 1 got hb request from 2
+2018-02-14 22:08:20.990921627 +0800 CST 0 got hb request from 2
+2018-02-14 22:08:20.991394897 +0800 CST 1 got hb request from 2
+2018-02-14 22:08:21.048415329 +0800 CST 0 got hb request from 2
+2018-02-14 22:08:21.048961961 +0800 CST 1 got hb request from 2
+2018-02-14 22:08:21.109738895 +0800 CST 0 got hb request from 2
+2018-02-14 22:08:21.110099331 +0800 CST 1 got hb request from 2
+2018-02-14 22:08:21.175727683 +0800 CST 0 got hb request from 2
+2018-02-14 22:08:21.179708495 +0800 CST 1 got hb request from 2
+2018-02-14 22:08:21.248589235 +0800 CST 0 got hb request from 2
+2018-02-14 22:08:21.249613683 +0800 CST 1 got hb request from 2
+2018-02-14 22:08:21.320155648 +0800 CST 1 got hb request from 2
+2018-02-14 22:08:21.321412143 +0800 CST 0 got hb request from 2
+  ... Passed
+--- FAIL: TestInitialElection2A (2.51s)
+	testing.go:610: race detected during execution of test
+2018-02-14 22:08:21.336966686 +0800 CST creating raft 0
+2018-02-14 22:08:21.337200164 +0800 CST 0 created
+2018-02-14 22:08:21.337472846 +0800 CST creating raft 1
+2018-02-14 22:08:21.337731719 +0800 CST 1 created
+2018-02-14 22:08:21.338003503 +0800 CST creating raft 2
+2018-02-14 22:08:21.338291129 +0800 CST 2 created
+Test (2A): election after network failure ...
+2018-02-14 22:08:21.524654898 +0800 CST 1 become candidate
+2018-02-14 22:08:21.524746595 +0800 CST 1 begin vote, term: 2
+2018-02-14 22:08:21.525326332 +0800 CST sending vote 1 -> 2
+2018-02-14 22:08:21.525391251 +0800 CST 1 call 2 rpc start, term: 2
+2018-02-14 22:08:21.525716489 +0800 CST sending vote 1 -> 0
+2018-02-14 22:08:21.525762949 +0800 CST 1 call 0 rpc start, term: 2
+2018-02-14 22:08:21.526513345 +0800 CST 1 -> 2 received
+2018-02-14 22:08:21.526574174 +0800 CST 1 -> 2 vote result true
+2018-02-14 22:08:21.526770758 +0800 CST 2 got vote request from 1
+2018-02-14 22:08:21.527511338 +0800 CST 1 -> 0 received
+2018-02-14 22:08:21.527574974 +0800 CST 1 -> 0 vote result true
+2018-02-14 22:08:21.528074016 +0800 CST 1 call 0 rpc end, term: 2
+2018-02-14 22:08:21.528852826 +0800 CST 1 call 2 rpc end, term: 2
+2018-02-14 22:08:21.528899789 +0800 CST 0 got vote request from 1
+1 become leader
+exit status 2
+FAIL	raft	2.739s
